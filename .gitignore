@@ -1,0 +1,15 @@
+# 학생 개인정보가 들어가는 파일 - 절대 커밋 금지
+index.plain.html
+exclude.local.json
+roster_dir.local.txt
+*.xlsx
+*.xls
+*.csv
+packs.json
+roster*.json
+
+# 기타
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

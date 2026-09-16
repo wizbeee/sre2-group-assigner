@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>과학탐구실험2 조 편성</title>
+<style>
+  :root{
+    --bg:#f6f5f3; --panel:#ffffff; --ink:#1a1a1a; --muted:#6b6b6b;
+    --line:#e2e0dc; --wall:#ece7e4; --accent:#1f5f4b; --accent-soft:#e6f0ec;
+    --g1:#e8f1fb; --g1b:#3c7fc4;
+    --g2:#fdeee8; --g2b:#d0704a;
+    --g3:#eaf5ec; --g3b:#3f8f5c;
+    --g4:#f3ecfa; --g4b:#7a5bab;
+    --g5:#fdf5e0; --g5b:#b8892a;
+    --g6:#eaf4f5; --g6b:#2f8a95;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Pretendard","맑은 고딕","Malgun Gothic",-apple-system,system-ui,sans-serif;
+    font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+  header h1{font-size:22px;margin:0 0 4px;letter-spacing:-.02em}
+  header p{margin:0;color:var(--muted);font-size:13.5px}
+
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:18px 0 14px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+  select,button{font:inherit;border-radius:8px;border:1px solid var(--line);background:#fff;
+    padding:9px 12px;color:var(--ink);cursor:pointer}
+  select{min-width:250px}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button.primary:hover{filter:brightness(1.08)}
+  button:not(.primary):not(:disabled):hover{background:#f3f2f0}
+  button.primary:disabled,button:disabled{opacity:.45;cursor:not-allowed}
+  .spacer{flex:1}
+
+  .status{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;
+    font-size:13px;color:var(--muted);margin:0 2px 16px;min-height:20px}
+  .status b{color:var(--ink);font-weight:600}
+  .warn{color:#b5521f;font-weight:600}
+
+  /* ── 실험실 도면 ───────────────────────────── */
+  .room{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:26px 30px 26px 46px;overflow:hidden}
+  .room::before,.room::after{content:"";position:absolute;top:0;bottom:0;width:26px;background:var(--wall)}
+  .room::before{left:0}
+  .room::after{right:0}
+  .floor{position:relative;display:grid;
+    grid-template-columns:1fr 1fr 1fr 52px;
+    grid-template-rows:auto auto auto;
+    gap:16px 22px}
+
+  .desk{border:3px solid #111;background:#fff;border-radius:2px;
+    min-height:206px;padding:8px 9px 12px;display:flex;flex-direction:column}
+  .desk .dh{display:flex;align-items:baseline;justify-content:space-between;
+    border-bottom:2px solid currentColor;padding-bottom:5px;margin-bottom:7px}
+  .desk .dh .no{font-size:16.5px;font-weight:800;letter-spacing:-.01em}
+  .desk .dh .cnt{font-size:12.5px;font-weight:600;opacity:.75;color:var(--ink)}
+  .desk ul{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;
+    justify-content:center;gap:7px}
+  .desk li{display:flex;gap:10px;align-items:baseline;justify-content:center;text-align:center;
+    background:#fff;border-radius:4px;padding:1px 2px}
+  .desk li .sid{font-variant-numeric:tabular-nums;font-size:16px;font-weight:600;
+    color:var(--muted);letter-spacing:.01em;white-space:nowrap}
+  .desk li .nm{font-weight:700;font-size:18.5px;letter-spacing:-.01em;white-space:nowrap}
+  .desk.empty{color:#999;align-items:center;justify-content:center}
+  .desk.empty .ph{font-size:13px;color:#aaa;font-weight:600}
+
+  .g1{color:var(--g1b)} .g1 .dh{background:var(--g1);margin:-8px -9px 7px;padding:6px 9px}
+  .g2{color:var(--g2b)} .g2 .dh{background:var(--g2);margin:-8px -9px 7px;padding:6px 9px}
+  .g3{color:var(--g3b)} .g3 .dh{background:var(--g3);margin:-8px -9px 7px;padding:6px 9px}
+  .g4{color:var(--g4b)} .g4 .dh{background:var(--g4);margin:-8px -9px 7px;padding:6px 9px}
+  .g5{color:var(--g5b)} .g5 .dh{background:var(--g5);margin:-8px -9px 7px;padding:6px 9px}
+  .g6{color:var(--g6b)} .g6 .dh{background:var(--g6);margin:-8px -9px 7px;padding:6px 9px}
+
+  .window{border:3px solid #111;background:#fff;display:flex;align-items:center;justify-content:center;
+    writing-mode:vertical-rl;font-weight:700;font-size:14px;letter-spacing:.25em;color:#333}
+  .podium{grid-column:2 / 4;border:3px solid #111;background:#fff;height:50px;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:.3em;
+    margin:6px auto 0;width:min(460px,100%)}
+  .door{position:absolute;left:4px;bottom:12px;border:3px solid #111;background:#fff;
+    width:106px;height:52px;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13.5px;letter-spacing:.2em;color:#333}
+  .bottomrow{grid-column:1 / 4;position:relative;display:flex;justify-content:center}
+
+  /* ── 명단 표 ───────────────────────────── */
+  .listBox{margin-top:22px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .listBox h2{font-size:15px;margin:0 0 12px}
+  .tablegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:4px 6px;border-bottom:1px solid #efeeec}
+  th{font-size:12px;color:var(--muted);font-weight:600;border-bottom:1.5px solid var(--line)}
+  td.sid{font-variant-numeric:tabular-nums;color:var(--muted);width:64px}
+  td.cls{color:var(--muted);width:48px;font-size:12px}
+  caption{text-align:left;font-weight:700;font-size:13.5px;padding-bottom:5px}
+
+  .hint{font-size:12.5px;color:var(--muted);margin-top:10px}
+  .lock{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:26px 24px;margin:18px 0;max-width:540px}
+  .lock h2{margin:0 0 6px;font-size:16px}
+  .lock .desc{margin:0 0 16px;color:var(--muted);font-size:13.5px}
+  .lock form{display:flex;gap:8px;flex-wrap:wrap}
+  .lock input[type=password]{font:inherit;padding:9px 12px;border:1px solid var(--line);
+    border-radius:8px;min-width:220px;flex:1}
+  .lock label{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:13px;color:var(--muted)}
+  .lockMsg{font-size:13px;margin:12px 0 0;min-height:18px;color:var(--muted)}
+  .lockMsg.err{color:#b5521f;font-weight:600}
+  .placeholder{background:#fff;border:1px dashed #d6d3ce;border-radius:12px;
+    padding:56px 20px;text-align:center;color:var(--muted);font-size:14.5px}
+  .placeholder b{color:var(--accent)}
+
+  @media screen and (max-width:900px){
+    .floor{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto}
+    .window{writing-mode:horizontal-tb;min-height:34px;letter-spacing:.3em}
+    .podium{grid-column:1 / 3;width:min(460px,68%)}
+    .bottomrow{grid-column:1 / 3;justify-content:flex-end}
+    .room{padding-left:40px}
+    .tablegrid{grid-template-columns:1fr}
+    select{min-width:100%}
+    .field{width:100%}
+  }
+
+  @media screen and (max-width:640px){
+    .floor{grid-template-columns:1fr}
+    .podium{grid-column:1 / 2;width:min(460px,72%)}
+    .bottomrow{grid-column:1 / 2}
+    .desk{min-height:auto}
+  }
+
+  @media print{
+    body{background:#fff}
+    .wrap{max-width:none;padding:0}
+    .controls,.hint,.noprint{display:none !important}
+    .room,.listBox{border:none;padding-left:44px}
+    .listBox{break-before:page}
+    header h1{font-size:18px}
+    .desk{min-height:184px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>과학탐구실험2 · 분반(팩)별 조 편성</h1>
+    <p>팩을 선택하고 <b>조 배정하기</b>를 누르면 실험실 좌석 도면에 6개 조가 배치됩니다. 같은 반 학생은 최대한 다른 조로 나뉩니다.</p>
+  </header>
+
+  <div class="lock noprint" id="lock" style="display:none">
+    <h2>🔒 명단 잠금 해제</h2>
+    <p class="desc">학생 명단은 암호화되어 있습니다. 비밀번호를 한 번 입력하면 이 기기에서는 다음부터 바로 열립니다.</p>
+    <form id="lockForm">
+      <input type="password" id="pw" placeholder="비밀번호" autocomplete="current-password">
+      <button class="primary" type="submit" id="btnUnlock">잠금 해제</button>
+    </form>
+    <label><input type="checkbox" id="remember" checked> 이 기기에서 기억하기</label>
+    <p class="lockMsg" id="lockMsg"></p>
+  </div>
+
+  <div id="app">
+  <div class="controls noprint">
+    <div class="field">
+      <label for="packSel">팩(분반) 선택</label>
+      <select id="packSel"></select>
+    </div>
+    <button class="primary" id="btnAssign">조 배정하기</button>
+    <button id="btnRe" disabled>다시 배정</button>
+    <div class="spacer"></div>
+    <button id="btnPrint" disabled>인쇄 / PDF</button>
+    <button id="btnCsv" disabled>CSV 저장</button>
+    <button id="btnLock" title="저장된 비밀번호를 지우고 잠급니다">🔒 잠금</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="placeholder" id="placeholder">팩을 선택한 뒤 <b>조 배정하기</b>를 누르면 실험실 도면과 조별 명단이 나타납니다.</div>
+
+  <div id="result" style="display:none">
+  <div class="room" id="room">
+    <div class="door">출입구</div>
+    <div class="floor">
+      <div class="desk empty" id="d4"><span class="ph">4조</span></div>
+      <div class="desk empty" id="d5"><span class="ph">5조</span></div>
+      <div class="desk empty" id="d6"><span class="ph">6조</span></div>
+      <div class="window">창문</div>
+      <div class="desk empty" id="d1"><span class="ph">1조</span></div>
+      <div class="desk empty" id="d2"><span class="ph">2조</span></div>
+      <div class="desk empty" id="d3"><span class="ph">3조</span></div>
+      <div class="window">창문</div>
+      <div class="bottomrow"><div class="podium">교 탁</div></div>
+    </div>
+  </div>
+  <p class="hint noprint">도면 기준: 교탁 쪽 앞줄이 1·2·3조, 창문 반대쪽 뒷줄이 4·5·6조입니다. 인원이 6의 배수가 아니면 조별 인원은 1명까지 차이 납니다.</p>
+
+  <div class="listBox" id="listBox">
+    <h2 id="listTitle">조별 명단</h2>
+    <div class="tablegrid" id="tables"></div>
+  </div>
+  </div><!-- /#result -->
+  </div><!-- /#app -->
+</div>
+
+<script id="rosterEnc" type="application/json">/*__DATA__*/</script>
+<script>
+const ENV = JSON.parse(document.getElementById('rosterEnc').textContent);
+const G = 6;
+const packSel = document.getElementById('packSel');
+const statusEl = document.getElementById('status');
+let PACKS = null;
+let current = null;   // {pack, groups:[[student]], collisions}
+
+/* ── 팩 목록 ── */
+function fillPacks(){
+  packSel.innerHTML = '';
+  Object.keys(PACKS).sort().forEach(k=>{
+    const p = PACKS[k];
+    const o = document.createElement('option');
+    o.value = k;
+    o.textContent = `${parseInt(k,10)}팩 · ${p.teacher} · ${p.room} · ${p.students.length}명`;
+    packSel.appendChild(o);
+  });
+}
+
+/* ── 배정 알고리즘 ──────────────────────────────
+   1) 반 인원이 많은 순으로 그리디 배치(같은 반 최소 + 정원 준수)
+   2) 교환(swap) 기반 국소 개선으로 같은 반 중복 최소화       */
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function caps(n){
+  const base = Math.floor(n/G), rem = n%G;
+  const idx = shuffle([...Array(G).keys()]);
+  const c = Array(G).fill(base);
+  for(let i=0;i<rem;i++) c[idx[i]]++;
+  return c;
+}
+function cost(groups){           // 같은 조 안의 같은 반 쌍 개수
+  let s=0;
+  for(const g of groups){
+    const m={};
+    for(const st of g) m[st.cls]=(m[st.cls]||0)+1;
+    for(const k in m) s += m[k]*(m[k]-1)/2;
+  }
+  return s;
+}
+function assign(students){
+  const cap = caps(students.length);
+  const byClass = {};
+  for(const s of students) (byClass[s.cls] ||= []).push(s);
+  const buckets = Object.values(byClass).sort((a,b)=>b.length-a.length).map(shuffle);
+
+  const groups = Array.from({length:G},()=>[]);
+  for(const b of buckets){
+    for(const st of b){
+      let best=-1, bestKey=null;
+      for(let i=0;i<G;i++){
+        if(groups[i].length >= cap[i]) continue;
+        const same = groups[i].filter(x=>x.cls===st.cls).length;
+        const key = [same, groups[i].length, Math.random()];
+        if(best<0 || key[0]<bestKey[0] ||
+          (key[0]===bestKey[0] && (key[1]<bestKey[1] ||
+          (key[1]===bestKey[1] && key[2]<bestKey[2])))){ best=i; bestKey=key; }
+      }
+      groups[best].push(st);
+    }
+  }
+
+  // 국소 개선: 서로 다른 조의 학생 두 명을 바꿔 중복이 줄면 확정
+  let c = cost(groups);
+  for(let it=0; it<8000 && c>0; it++){
+    const a=Math.floor(Math.random()*G); let b=Math.floor(Math.random()*G);
+    if(a===b) continue;
+    const i=Math.floor(Math.random()*groups[a].length);
+    const j=Math.floor(Math.random()*groups[b].length);
+    const sa=groups[a][i], sb=groups[b][j];
+    if(!sa||!sb||sa.cls===sb.cls) continue;
+    const d = same(groups[b],sb.cls)-1 + same(groups[a],sa.cls)-1   // 현재 중복
+            - same(groups[b],sa.cls) - same(groups[a],sb.cls);      // 교환 후 중복
+    if(d > 0){ groups[a][i]=sb; groups[b][j]=sa; c-=d; }
+  }
+  for(const g of groups) g.sort((x,y)=> x.id.localeCompare(y.id));
+  return {groups, collisions:c};
+}
+function same(g, cls){ let n=0; for(const s of g) if(s.cls===cls) n++; return n; }
+
+/* ── 렌더링 ── */
+function render(){
+  const {pack, groups, collisions} = current;
+  const p = PACKS[pack];
+  for(let i=0;i<G;i++){
+    const el = document.getElementById('d'+(i+1));
+    el.className = 'desk g'+(i+1);
+    el.innerHTML =
+      `<div class="dh"><span class="no">${i+1}조</span><span class="cnt">${groups[i].length}명</span></div>` +
+      `<ul>${groups[i].map(s=>`<li><span class="sid">${s.id}</span><span class="nm">${s.name}</span></li>`).join('')}</ul>`;
+  }
+  const sizes = groups.map(g=>g.length).join('·');
+  statusEl.innerHTML =
+    `<span><b>${parseInt(pack,10)}팩</b> · ${p.teacher} · ${p.room} · 총 <b>${p.students.length}명</b></span>` +
+    `<span>조별 인원 ${sizes}</span>` +
+    (collisions===0 ? ``
+      : `<span class="warn">⚠ 같은 반이 같은 조에 겹친 경우 ${collisions}쌍 (인원 제약상 불가피)</span>`);
+
+  const tables = document.getElementById('tables');
+  tables.innerHTML = groups.map((g,i)=>
+    `<table><caption>${i+1}조 (${g.length}명)</caption>
+      <thead><tr><th>학번</th><th>반</th><th>이름</th></tr></thead>
+      <tbody>${g.map(s=>`<tr><td class="sid">${s.id}</td><td class="cls">${s.cls}반</td><td>${s.name}</td></tr>`).join('')}</tbody>
+    </table>`).join('');
+  document.getElementById('listTitle').textContent =
+    `${parseInt(pack,10)}팩 조별 명단 (${p.teacher} · ${p.room})`;
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('result').style.display = '';
+  document.getElementById('btnRe').disabled = false;
+  document.getElementById('btnPrint').disabled = false;
+  document.getElementById('btnCsv').disabled = false;
+}
+
+function run(){
+  const pack = packSel.value;
+  const r = assign(PACKS[pack].students.map(s=>({...s})));
+  current = {pack, ...r};
+  render();
+}
+
+document.getElementById('btnAssign').addEventListener('click', run);
+document.getElementById('btnRe').addEventListener('click', run);
+document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+document.getElementById('btnCsv').addEventListener('click', ()=>{
+  if(!current) return;
+  const p = PACKS[current.pack];
+  const rows = [['팩','담당','실험실','조','학번','반','번호','이름']];
+  current.groups.forEach((g,i)=> g.forEach(s=>
+    rows.push([parseInt(current.pack,10), p.teacher, p.room, i+1, s.id, s.cls, s.num, s.name])));
+  const csv = '﻿' + rows.map(r=>r.join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = `과탐실2_${parseInt(current.pack,10)}팩_조편성.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+});
+packSel.addEventListener('change', ()=>{
+  current = null;
+  for(let i=0;i<G;i++){
+    const el=document.getElementById('d'+(i+1));
+    el.className='desk empty'; el.innerHTML=`<span class="ph">${i+1}조</span>`;
+  }
+  statusEl.textContent='';
+  document.getElementById('result').style.display='none';
+  document.getElementById('placeholder').style.display='';
+  ['btnRe','btnPrint','btnCsv'].forEach(id=>document.getElementById(id).disabled=true);
+});
+/* ── 명단 잠금 해제 (PBKDF2-SHA256 + AES-GCM) ───────────── */
+const lockEl = document.getElementById('lock');
+const appEl  = document.getElementById('app');
+const msgEl  = document.getElementById('lockMsg');
+const PW_KEY = 'sre2ga.pw';
+
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function decryptRoster(pw){
+  if(!(window.crypto && crypto.subtle)) throw new Error('nocrypto');
+  const km = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt:b64d(ENV.salt), iterations:ENV.iterations, hash:'SHA-256'},
+    km, {name:'AES-GCM', length:256}, false, ['decrypt']);
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:b64d(ENV.iv)}, key, b64d(ENV.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+function startApp(packs){
+  PACKS = packs;
+  fillPacks();
+  lockEl.style.display = 'none';
+  appEl.style.display = '';
+}
+
+function showLock(msg, isErr){
+  appEl.style.display = 'none';
+  lockEl.style.display = '';
+  msgEl.textContent = msg || '';
+  msgEl.className = 'lockMsg' + (isErr ? ' err' : '');
+  const el = document.getElementById('pw');
+  if(isErr) el.value = '';
+  el.focus();
+}
+
+async function tryUnlock(pw, remember){
+  const btn = document.getElementById('btnUnlock');
+  btn.disabled = true;
+  msgEl.textContent = '확인 중…'; msgEl.className = 'lockMsg';
+  try{
+    const packs = await decryptRoster(pw);
+    if(remember){ try{ localStorage.setItem(PW_KEY, pw); }catch(e){} }
+    startApp(packs);
+  }catch(err){
+    try{ localStorage.removeItem(PW_KEY); }catch(e){}
+    showLock(err && err.message === 'nocrypto'
+      ? '이 브라우저에서는 암호 해제를 지원하지 않습니다. https:// 주소로 접속해 주세요.'
+      : '비밀번호가 올바르지 않습니다.', true);
+  }finally{ btn.disabled = false; }
+}
+
+document.getElementById('lockForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const pw = document.getElementById('pw').value;
+  if(!pw) return;
+  tryUnlock(pw, document.getElementById('remember').checked);
+});
+document.getElementById('btnLock').addEventListener('click', ()=>{
+  try{ localStorage.removeItem(PW_KEY); }catch(e){}
+  location.reload();
+});
+
+if(!ENV.enc){                       // 암호 없는 로컬 빌드
+  document.getElementById('btnLock').style.display = 'none';
+  startApp(ENV.data);
+}else{
+  let saved = null;
+  try{ saved = localStorage.getItem(PW_KEY); }catch(e){}
+  if(saved){ showLock('자동 잠금 해제 중…', false); tryUnlock(saved, true); }
+  else{ showLock('', false); }
+}
+</script>
+</body>
+</html>
