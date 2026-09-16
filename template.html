@@ -44,9 +44,9 @@
   /* ── 실험실 도면 ───────────────────────────── */
   .room{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;
     padding:26px 30px 26px 46px;overflow:hidden}
-  .room::before,.room::after{content:"";position:absolute;top:0;bottom:0;width:26px;background:var(--wall)}
-  .room::before{left:0}
-  .room::after{right:0}
+  .wall{position:absolute;top:0;bottom:0;width:26px;background:var(--wall)}
+  .wall.l{left:0}
+  .wall.r{right:0}
   .floor{position:relative;display:grid;
     grid-template-columns:1fr 1fr 1fr 52px;
     grid-template-rows:auto auto auto;
@@ -188,6 +188,7 @@
     <div class="docMeta" id="docMeta"></div>
   </div>
   <div class="room" id="room">
+    <div class="wall l"></div><div class="wall r"></div>
     <div class="door">출입구</div>
     <div class="floor">
       <div class="desk empty" id="d4"><span class="ph">4조</span></div>
