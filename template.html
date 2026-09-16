@@ -381,10 +381,12 @@ async function savePdf(){
       const r = Math.min((pw - 2*m)/canvas.width, (ph - 2*m)/canvas.height);
       const w = canvas.width * r, h = canvas.height * r;
       if(i) pdf.addPage('a4','landscape');
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', (pw - w)/2, m, w, h);
+      // 압축 옵션을 주지 않으면 한 쪽에 10MB 넘게 들어간다
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', (pw - w)/2, m, w, h, undefined, 'FAST');
     }
     pdf.save(`과탐실2_${parseInt(current.pack,10)}팩_조편성_${stampFile(current.when)}.pdf`);
   }catch(e){
+    console.error('PDF 생성 실패', e);
     alert('PDF를 만들지 못했습니다: ' + (e && e.message ? e.message : e));
   }finally{
     btn.disabled = false; btn.textContent = label;
