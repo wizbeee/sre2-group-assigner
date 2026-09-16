@@ -96,6 +96,10 @@
   td.cls{color:var(--muted);width:48px;font-size:12px}
   caption{text-align:left;font-weight:700;font-size:13.5px;padding-bottom:5px}
 
+  .docHead{margin:0 0 12px}
+  .docHead h2{margin:0 0 3px;font-size:17px;letter-spacing:-.01em}
+  .docHead .docMeta{font-size:13px;color:var(--muted)}
+  #page1{background:#fff}
   .hint{font-size:12.5px;color:var(--muted);margin-top:10px}
   .lock{background:var(--panel);border:1px solid var(--line);border-radius:12px;
     padding:26px 24px;margin:18px 0;max-width:540px}
@@ -132,7 +136,7 @@
   @media print{
     body{background:#fff}
     .wrap{max-width:none;padding:0}
-    .controls,.hint,.noprint{display:none !important}
+    .controls,.hint,.noprint,.status{display:none !important}
     .room,.listBox{border:none;padding-left:44px}
     .listBox{break-before:page}
     header h1{font-size:18px}
@@ -167,7 +171,8 @@
     <button class="primary" id="btnAssign">조 배정하기</button>
     <button id="btnRe" disabled>다시 배정</button>
     <div class="spacer"></div>
-    <button id="btnPrint" disabled>인쇄 / PDF</button>
+    <button id="btnPdf" disabled>PDF 다운로드</button>
+    <button id="btnPrint" disabled>인쇄</button>
     <button id="btnCsv" disabled>CSV 저장</button>
     <button id="btnLock" title="저장된 비밀번호를 지우고 잠급니다">🔒 잠금</button>
   </div>
@@ -177,6 +182,11 @@
   <div class="placeholder" id="placeholder">팩을 선택한 뒤 <b>조 배정하기</b>를 누르면 실험실 도면과 조별 명단이 나타납니다.</div>
 
   <div id="result" style="display:none">
+  <div id="page1">
+  <div class="docHead" id="docHead">
+    <h2 id="docTitle"></h2>
+    <div class="docMeta" id="docMeta"></div>
+  </div>
   <div class="room" id="room">
     <div class="door">출입구</div>
     <div class="floor">
@@ -191,6 +201,7 @@
       <div class="bottomrow"><div class="podium">교 탁</div></div>
     </div>
   </div>
+  </div><!-- /#page1 -->
   <p class="hint noprint">도면 기준: 교탁 쪽 앞줄이 1·2·3조, 창문 반대쪽 뒷줄이 4·5·6조입니다. 인원이 6의 배수가 아니면 조별 인원은 1명까지 차이 납니다.</p>
 
   <div class="listBox" id="listBox">
@@ -201,6 +212,7 @@
   </div><!-- /#app -->
 </div>
 
+<script>/*__LIBS__*/</script>
 <script id="rosterEnc" type="application/json">/*__DATA__*/</script>
 <script>
 const ENV = JSON.parse(document.getElementById('rosterEnc').textContent);
@@ -296,6 +308,12 @@ function render(){
       `<div class="dh"><span class="no">${i+1}조</span><span class="cnt">${groups[i].length}명</span></div>` +
       `<ul>${groups[i].map(s=>`<li><span class="sid">${s.id}</span><span class="nm">${s.name}</span></li>`).join('')}</ul>`;
   }
+  const when = stampText(current.when);
+  document.getElementById('docTitle').textContent =
+    `과학탐구실험2 ${parseInt(pack,10)}팩 조 편성`;
+  document.getElementById('docMeta').textContent =
+    `${p.teacher} · ${p.room} · ${p.students.length}명 · 6개 조 · 배정 일시 ${when}`;
+
   const sizes = groups.map(g=>g.length).join('·');
   statusEl.innerHTML =
     `<span><b>${parseInt(pack,10)}팩</b> · ${p.teacher} · ${p.room} · 총 <b>${p.students.length}명</b></span>` +
@@ -310,34 +328,79 @@ function render(){
       <tbody>${g.map(s=>`<tr><td class="sid">${s.id}</td><td class="cls">${s.cls}반</td><td>${s.name}</td></tr>`).join('')}</tbody>
     </table>`).join('');
   document.getElementById('listTitle').textContent =
-    `${parseInt(pack,10)}팩 조별 명단 (${p.teacher} · ${p.room})`;
+    `${parseInt(pack,10)}팩 조별 명단 · ${p.teacher} · ${p.room} · 배정 일시 ${when}`;
   document.getElementById('placeholder').style.display = 'none';
   document.getElementById('result').style.display = '';
-  document.getElementById('btnRe').disabled = false;
-  document.getElementById('btnPrint').disabled = false;
-  document.getElementById('btnCsv').disabled = false;
+  ['btnRe','btnPdf','btnPrint','btnCsv'].forEach(id=>document.getElementById(id).disabled = false);
 }
 
 function run(){
   const pack = packSel.value;
   const r = assign(PACKS[pack].students.map(s=>({...s})));
-  current = {pack, ...r};
+  current = {pack, when: new Date(), ...r};
   render();
+}
+
+/* ── 일시 표기 ── */
+function stampText(d){
+  const w = ['일','월','화','수','목','금','토'][d.getDay()];
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}(${w}) ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function stampFile(d){
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
 }
 
 document.getElementById('btnAssign').addEventListener('click', run);
 document.getElementById('btnRe').addEventListener('click', run);
 document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+document.getElementById('btnPdf').addEventListener('click', savePdf);
+
+/* ── PDF 저장 (도면 1쪽 + 명단 1쪽, 화면 그대로 캡처) ────── */
+async function savePdf(){
+  if(!current) return;
+  const btn = document.getElementById('btnPdf');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'PDF 만드는 중…';
+  try{
+    if(!(window.jspdf && window.html2canvas)) throw new Error('PDF 모듈을 불러오지 못했습니다');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+    const pages = [document.getElementById('page1'), document.getElementById('listBox')];
+    for(let i=0;i<pages.length;i++){
+      const canvas = await html2canvas(pages[i], {
+        scale: 2, backgroundColor:'#ffffff', windowWidth: 1240, windowHeight: 1600,
+        onclone: doc => {
+          doc.body.style.background = '#fff';
+          doc.querySelectorAll('.noprint').forEach(el=>{ el.style.display = 'none'; });
+          doc.querySelectorAll('.window').forEach(el=>{ el.style.writingMode = 'vertical-rl'; });
+        }
+      });
+      const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight(), m = 8;
+      const r = Math.min((pw - 2*m)/canvas.width, (ph - 2*m)/canvas.height);
+      const w = canvas.width * r, h = canvas.height * r;
+      if(i) pdf.addPage('a4','landscape');
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', (pw - w)/2, m, w, h);
+    }
+    pdf.save(`과탐실2_${parseInt(current.pack,10)}팩_조편성_${stampFile(current.when)}.pdf`);
+  }catch(e){
+    alert('PDF를 만들지 못했습니다: ' + (e && e.message ? e.message : e));
+  }finally{
+    btn.disabled = false; btn.textContent = label;
+  }
+}
 document.getElementById('btnCsv').addEventListener('click', ()=>{
   if(!current) return;
   const p = PACKS[current.pack];
-  const rows = [['팩','담당','실험실','조','학번','반','번호','이름']];
+  const when = stampText(current.when);
+  const rows = [['배정일시','팩','담당','실험실','조','학번','반','번호','이름']];
   current.groups.forEach((g,i)=> g.forEach(s=>
-    rows.push([parseInt(current.pack,10), p.teacher, p.room, i+1, s.id, s.cls, s.num, s.name])));
+    rows.push([when, parseInt(current.pack,10), p.teacher, p.room, i+1, s.id, s.cls, s.num, s.name])));
   const csv = '﻿' + rows.map(r=>r.join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = `과탐실2_${parseInt(current.pack,10)}팩_조편성.csv`;
+  a.download = `과탐실2_${parseInt(current.pack,10)}팩_조편성_${stampFile(current.when)}.csv`;
   a.click(); URL.revokeObjectURL(a.href);
 });
 packSel.addEventListener('change', ()=>{
@@ -349,7 +412,7 @@ packSel.addEventListener('change', ()=>{
   statusEl.textContent='';
   document.getElementById('result').style.display='none';
   document.getElementById('placeholder').style.display='';
-  ['btnRe','btnPrint','btnCsv'].forEach(id=>document.getElementById(id).disabled=true);
+  ['btnRe','btnPdf','btnPrint','btnCsv'].forEach(id=>document.getElementById(id).disabled=true);
 });
 /* ── 명단 잠금 해제 (PBKDF2-SHA256 + AES-GCM) ───────────── */
 const lockEl = document.getElementById('lock');

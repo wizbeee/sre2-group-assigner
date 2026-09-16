@@ -110,8 +110,17 @@ def main():
         raise SystemExit("비밀번호가 비어 있습니다.")
 
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
-    if "/*__DATA__*/" not in tpl:
-        raise SystemExit("template.html 에 /*__DATA__*/ 자리가 없습니다.")
+    if "/*__DATA__*/" not in tpl or "/*__LIBS__*/" not in tpl:
+        raise SystemExit("template.html 에 /*__DATA__*/ 또는 /*__LIBS__*/ 자리가 없습니다.")
+
+    # PDF 생성 라이브러리(html2canvas + jsPDF)를 index.html 안에 넣어 단일 파일로 만든다
+    libs = []
+    for name in ("html2canvas.min.js", "jspdf.umd.min.js"):
+        code = io.open(os.path.join(HERE, "vendor", name), encoding="utf-8").read()
+        if "</script" in code:
+            raise SystemExit(f"{name} 에 </script 문자열이 있어 중단합니다.")
+        libs.append(code)
+    tpl = tpl.replace("/*__LIBS__*/", "\n;\n".join(libs))
 
     enc_env = json.dumps(encrypt(data_json, password), separators=(",", ":"))
     io.open(os.path.join(HERE, "index.html"), "w", encoding="utf-8").write(
