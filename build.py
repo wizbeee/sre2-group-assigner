@@ -16,6 +16,7 @@
   필요 패키지: pip install openpyxl cryptography
 """
 import base64
+import datetime
 import getpass
 import hashlib
 import io
@@ -110,8 +111,12 @@ def main():
         raise SystemExit("비밀번호가 비어 있습니다.")
 
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
-    if "/*__DATA__*/" not in tpl or "/*__LIBS__*/" not in tpl:
-        raise SystemExit("template.html 에 /*__DATA__*/ 또는 /*__LIBS__*/ 자리가 없습니다.")
+    for slot in ("/*__DATA__*/", "/*__LIBS__*/", "/*__BUILT__*/"):
+        if slot not in tpl:
+            raise SystemExit(f"template.html 에 {slot} 자리가 없습니다.")
+
+    # 화면 아래에 "명단 갱신: ..." 으로 찍히는 빌드 시각 (옛 파일을 보고 있는지 구분용)
+    tpl = tpl.replace("/*__BUILT__*/", datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
 
     # PDF 생성 라이브러리(html2canvas + jsPDF)를 index.html 안에 넣어 단일 파일로 만든다
     libs = []

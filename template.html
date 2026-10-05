@@ -14,6 +14,8 @@
     --g4:#f3ecfa; --g4b:#7a5bab;
     --g5:#fdf5e0; --g5b:#b8892a;
     --g6:#eaf4f5; --g6b:#2f8a95;
+    --g7:#fdecf1; --g7b:#b4517a;
+    --g8:#eef0e6; --g8b:#6c7f3f;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
@@ -27,6 +29,7 @@
     background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:18px 0 14px}
   .field{display:flex;flex-direction:column;gap:6px}
   .field label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+  #groupSel{min-width:150px}
   select,button{font:inherit;border-radius:8px;border:1px solid var(--line);background:#fff;
     padding:9px 12px;color:var(--ink);cursor:pointer}
   select{min-width:250px}
@@ -48,8 +51,7 @@
   .wall.l{left:0}
   .wall.r{right:0}
   .floor{position:relative;display:grid;
-    grid-template-columns:1fr 1fr 1fr 52px;
-    grid-template-rows:auto auto auto;
+    grid-template-columns:repeat(var(--cols,3),1fr) 52px;
     gap:16px 22px}
 
   .desk{border:3px solid #111;background:#fff;border-radius:2px;
@@ -74,6 +76,8 @@
   .g4{color:var(--g4b)} .g4 .dh{background:var(--g4);margin:-8px -9px 7px;padding:6px 9px}
   .g5{color:var(--g5b)} .g5 .dh{background:var(--g5);margin:-8px -9px 7px;padding:6px 9px}
   .g6{color:var(--g6b)} .g6 .dh{background:var(--g6);margin:-8px -9px 7px;padding:6px 9px}
+  .g7{color:var(--g7b)} .g7 .dh{background:var(--g7);margin:-8px -9px 7px;padding:6px 9px}
+  .g8{color:var(--g8b)} .g8 .dh{background:var(--g8);margin:-8px -9px 7px;padding:6px 9px}
 
   .window{border:3px solid #111;background:#fff;display:flex;align-items:center;justify-content:center;
     writing-mode:vertical-rl;font-weight:700;font-size:14px;letter-spacing:.25em;color:#333}
@@ -83,7 +87,7 @@
   .door{position:absolute;left:4px;bottom:12px;border:3px solid #111;background:#fff;
     width:106px;height:52px;display:flex;align-items:center;justify-content:center;
     font-weight:700;font-size:13.5px;letter-spacing:.2em;color:#333}
-  .bottomrow{grid-column:1 / 4;position:relative;display:flex;justify-content:center}
+  .bottomrow{grid-column:1 / span var(--cols,3);position:relative;display:flex;justify-content:center}
 
   /* ── 명단 표 ───────────────────────────── */
   .listBox{margin-top:22px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
@@ -101,6 +105,7 @@
   .docHead .docMeta{font-size:13px;color:var(--muted)}
   #page1{background:#fff}
   .hint{font-size:12.5px;color:var(--muted);margin-top:10px}
+  .foot{margin:26px 2px 0;font-size:12px;color:#9a9a9a}
   .lock{background:var(--panel);border:1px solid var(--line);border-radius:12px;
     padding:26px 24px;margin:18px 0;max-width:540px}
   .lock h2{margin:0 0 6px;font-size:16px}
@@ -168,6 +173,18 @@
       <label for="packSel">팩(분반) 선택</label>
       <select id="packSel"></select>
     </div>
+    <div class="field">
+      <label for="groupSel">조 개수</label>
+      <select id="groupSel">
+        <option value="2">2개 조</option>
+        <option value="3">3개 조</option>
+        <option value="4">4개 조</option>
+        <option value="5">5개 조</option>
+        <option value="6" selected>6개 조 (실험대 수)</option>
+        <option value="7">7개 조</option>
+        <option value="8">8개 조</option>
+      </select>
+    </div>
     <button class="primary" id="btnAssign">조 배정하기</button>
     <button id="btnRe" disabled>다시 배정</button>
     <div class="spacer"></div>
@@ -190,20 +207,10 @@
   <div class="room" id="room">
     <div class="wall l"></div><div class="wall r"></div>
     <div class="door">출입구</div>
-    <div class="floor">
-      <div class="desk empty" id="d4"><span class="ph">4조</span></div>
-      <div class="desk empty" id="d5"><span class="ph">5조</span></div>
-      <div class="desk empty" id="d6"><span class="ph">6조</span></div>
-      <div class="window">창문</div>
-      <div class="desk empty" id="d1"><span class="ph">1조</span></div>
-      <div class="desk empty" id="d2"><span class="ph">2조</span></div>
-      <div class="desk empty" id="d3"><span class="ph">3조</span></div>
-      <div class="window">창문</div>
-      <div class="bottomrow"><div class="podium">교 탁</div></div>
-    </div>
+    <div class="floor" id="floor"></div>
   </div>
   </div><!-- /#page1 -->
-  <p class="hint noprint">도면 기준: 교탁 쪽 앞줄이 1·2·3조, 창문 반대쪽 뒷줄이 4·5·6조입니다. 인원이 6의 배수가 아니면 조별 인원은 1명까지 차이 납니다.</p>
+  <p class="hint noprint" id="hint"></p>
 
   <div class="listBox" id="listBox">
     <h2 id="listTitle">조별 명단</h2>
@@ -211,14 +218,18 @@
   </div>
   </div><!-- /#result -->
   </div><!-- /#app -->
+  <p class="foot" id="foot"></p>
 </div>
 
 <script>/*__LIBS__*/</script>
 <script id="rosterEnc" type="application/json">/*__DATA__*/</script>
 <script>
 const ENV = JSON.parse(document.getElementById('rosterEnc').textContent);
-const G = 6;
+const BUILT = "/*__BUILT__*/";
+let G = 6;                       // 조 개수 (조 배정할 때 선택값으로 갱신)
 const packSel = document.getElementById('packSel');
+const groupSel = document.getElementById('groupSel');
+const floorEl = document.getElementById('floor');
 const statusEl = document.getElementById('status');
 let PACKS = null;
 let current = null;   // {pack, groups:[[student]], collisions}
@@ -234,6 +245,34 @@ function fillPacks(){
     packSel.appendChild(o);
   });
 }
+
+/* ── 실험실 도면 그리기 (조 개수에 맞춰 실험대 배치) ──────
+   앞줄(교탁 쪽)에 1조부터, 뒷줄에 나머지. 3조 이하면 한 줄.      */
+function frontCount(n){ return n<=3 ? n : Math.ceil(n/2); }
+function buildFloor(n){
+  const cols = frontCount(n);
+  floorEl.style.setProperty('--cols', cols);
+  const rows = n<=3
+    ? [range(1,n)]
+    : [range(cols+1,n), range(1,cols)];      // 뒷줄, 앞줄
+  let html = '';
+  for(const row of rows){
+    for(let i=0;i<cols;i++){
+      const g = row[i];
+      html += g
+        ? `<div class="desk empty" id="d${g}"><span class="ph">${g}조</span></div>`
+        : '<div></div>';
+    }
+    html += '<div class="window">창문</div>';
+  }
+  html += '<div class="bottomrow"><div class="podium">교 탁</div></div>';
+  floorEl.innerHTML = html;
+  const k = cols;
+  document.getElementById('hint').textContent = n<=3
+    ? `도면 기준: 교탁 쪽에 1~${n}조를 배치했습니다. 인원이 조 개수로 나누어떨어지지 않으면 조별 인원은 1명까지 차이 납니다.`
+    : `도면 기준: 교탁 쪽 앞줄이 1~${k}조, 창문 반대쪽 뒷줄이 ${k+1}~${n}조입니다. 인원이 조 개수로 나누어떨어지지 않으면 조별 인원은 1명까지 차이 납니다.`;
+}
+function range(a,b){ const r=[]; for(let i=a;i<=b;i++) r.push(i); return r; }
 
 /* ── 배정 알고리즘 ──────────────────────────────
    1) 반 인원이 많은 순으로 그리디 배치(같은 반 최소 + 정원 준수)
@@ -302,7 +341,8 @@ function same(g, cls){ let n=0; for(const s of g) if(s.cls===cls) n++; return n;
 function render(){
   const {pack, groups, collisions} = current;
   const p = PACKS[pack];
-  for(let i=0;i<G;i++){
+  buildFloor(groups.length);
+  for(let i=0;i<groups.length;i++){
     const el = document.getElementById('d'+(i+1));
     el.className = 'desk g'+(i+1);
     el.innerHTML =
@@ -313,7 +353,7 @@ function render(){
   document.getElementById('docTitle').textContent =
     `과학탐구실험2 ${parseInt(pack,10)}팩 조 편성`;
   document.getElementById('docMeta').textContent =
-    `${p.teacher} · ${p.room} · ${p.students.length}명 · 6개 조 · 배정 일시 ${when}`;
+    `${p.teacher} · ${p.room} · ${p.students.length}명 · ${groups.length}개 조 · 배정 일시 ${when}`;
 
   const sizes = groups.map(g=>g.length).join('·');
   statusEl.innerHTML =
@@ -336,6 +376,7 @@ function render(){
 }
 
 function run(){
+  G = parseInt(groupSel.value, 10) || 6;
   const pack = packSel.value;
   const r = assign(PACKS[pack].students.map(s=>({...s})));
   current = {pack, when: new Date(), ...r};
@@ -406,17 +447,16 @@ document.getElementById('btnCsv').addEventListener('click', ()=>{
   a.download = `과탐실2_${parseInt(current.pack,10)}팩_조편성_${stampFile(current.when)}.csv`;
   a.click(); URL.revokeObjectURL(a.href);
 });
-packSel.addEventListener('change', ()=>{
+function resetResult(){
   current = null;
-  for(let i=0;i<G;i++){
-    const el=document.getElementById('d'+(i+1));
-    el.className='desk empty'; el.innerHTML=`<span class="ph">${i+1}조</span>`;
-  }
+  buildFloor(parseInt(groupSel.value, 10) || 6);
   statusEl.textContent='';
   document.getElementById('result').style.display='none';
   document.getElementById('placeholder').style.display='';
   ['btnRe','btnPdf','btnPrint','btnCsv'].forEach(id=>document.getElementById(id).disabled=true);
-});
+}
+packSel.addEventListener('change', resetResult);
+groupSel.addEventListener('change', resetResult);
 /* ── 명단 잠금 해제 (PBKDF2-SHA256 + AES-GCM) ───────────── */
 const lockEl = document.getElementById('lock');
 const appEl  = document.getElementById('app');
@@ -439,6 +479,10 @@ async function decryptRoster(pw){
 function startApp(packs){
   PACKS = packs;
   fillPacks();
+  buildFloor(parseInt(groupSel.value, 10) || 6);
+  const total = Object.values(packs).reduce((a,p)=>a+p.students.length,0);
+  document.getElementById('foot').textContent =
+    `명단 갱신: ${BUILT} · ${Object.keys(packs).length}개 팩 ${total}명`;
   lockEl.style.display = 'none';
   appEl.style.display = '';
 }
